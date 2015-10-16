@@ -1,0 +1,268 @@
+import facebook
+import json
+import requests
+
+def pretty(obj):
+    return json.dumps(obj, sort_keys=True, indent=2)
+
+positivelist = []
+doc = open('positive-words.txt', 'r')
+
+for l in doc.readlines()[35:]:
+    positivelist.append(unicode(l.strip()))
+doc.close()
+
+negativelist = []
+f = open('negative-words.txt', 'r')
+for l in f.readlines()[35:]:
+    negativelist.append(unicode(l.strip()))
+
+class Comment:
+	def __init__(self,message="",source="NA"):
+		self.message = message
+		self.source = source
+	def positive(self):
+		postcount = 0
+		words = self.message.split()
+		for item in words:
+			if item in positivelist:
+				postcount = postcount + 1
+		if postcount == 0:
+			return 0
+		else: 
+			return float(postcount) / float(len(words))
+	def negative(self):
+		postcount = 0
+		words = self.message.split()
+		for item in words:
+			if item in negativelist:
+				postcount = postcount + 1
+		if postcount == 0:
+			return 0
+		else: 
+			return float(postcount) / float(len(words))
+			
+
+access_token = "CAACEdEose0cBAEy7OgRSZCC5PjR0OQjU0XAiQnrzHZCpjE2qvuZCPf52W6LyYJOV88w3G2Cmc3ATwlutSgd2UNBpnwjpMvkhBdsdDYuwBgoETRaZBTV5fRDMyWqzpVscwDrY5HPg0RnqVpkbgfpZApu5EAP4f4KQ2ulyXVUlgNsuZCBykPInqGEQyyvyXsh00uiO4bbC8a6gZDZD"
+def fbfunction(access_token):
+	graph = facebook.GraphAPI(access_token)
+	feed = graph.get_object("nytimes/feed", limit = 100)
+	fblist = []
+	for post in feed['data']:
+		try:
+			if post['comments']['data'][0]['message']:
+				for comment in post['comments']['data']:
+					message = comment['message']
+					fblist.append(Comment(message,"FB"))
+		except:
+			pass
+
+	fblist = fblist[:25]
+	return fblist
+	
+fbcommentslist = fbfunction(access_token)
+fbcomments = []
+for comments in fbcommentslist:
+	fbcomments.append(comments.message)
+
+#printing a list of comments
+#print feed['data'][0]['comments']['data'][0]['message']
+
+
+mynyturl = "http://api.nytimes.com/svc/community/v3/user-content/recent.json?force-replies=0&offset=25&api-key=120b923e10c1daa789cac369fb0e4268%3A7%3A67838803"
+def nytfunction(nyturl):
+	nytresult = requests.get(nyturl)
+	jsonnytapi = json.loads(nytresult.text)
+	mycomments = []
+	for post in jsonnytapi['results']['comments']:
+		acomment = post['commentBody']
+		mycomments.append(Comment(acomment,"NYT"))
+	return mycomments
+
+
+nytcommentlist = nytfunction(mynyturl)
+articlecomments = []
+for comments in nytcommentlist:
+	articlecomments.append(comments.message)
+
+#print nytresult.url
+#print nytresult.text
+
+#print jsonnytapi
+#type(d) is a dictionary
+
+
+
+
+
+#print jsonnytapi['results']['comments'][0]['commentBody']
+
+
+#printing a list of comments
+
+#print "----------------------------LENFUNCTIONS-------------------------------------------------------------------------------"
+
+print "This program tells you information comparing comments on nytimes.com to comments on The New York Times Facebook page."
+
+# def avglengthoflist(list):
+# 	for i in list:
+#     	lengthofitem = len(i)
+#     	avg = avg + lengthofitem
+#     print avg/lengthoflist
+		
+# lengthoflist1 = len(fbcomments)
+# lengthoflist2 = len(articlecomments)
+# print lengthoflist1
+# print lengthoflist2
+print "--INFORMATION ABOUT COMMENT LENGTH--"
+len(articlecomments)
+lengthoflist = len(articlecomments)
+avg = 0
+for item in articlecomments:
+    lengthofitem = len(item)
+    avg = avg + lengthofitem
+# print avg/lengthoflist
+print "the average length of a comment on a New York Times article is % d characters." % (avg/lengthoflist)
+
+len(fbcomments)
+lengthoflist2 = len(fbcomments)
+len(fbcomments)
+avg2 = 0
+for item in fbcomments:
+    lengthofitem2 = len(item)
+    avg2 = avg2 + lengthofitem2
+# print avg2/lengthoflist2
+print "the average length of a comment on a New York Times Facebook post is % d characters." % (avg2/lengthoflist2)
+
+
+#print "--------------------------finding---------------------------------------------------------------------------------"
+
+# def most_common(post_insts):
+#     return max(set(post_insts), key=post_insts.count)
+# print most_common(post_insts)
+
+def largerthan250ch(post_insts):
+   new_list = filter(lambda num: len(num) > 250, post_insts)
+   return new_list
+   
+# def tweet(commentslist):
+#    new_list2 = filter(lambda num: len(num) > 250, commentslist)
+#    return new_list2
+print "--INFORMATION ABOUT THE COMMENTS  WITH THE MOST CHARACTERS--"
+
+lenfb = len(largerthan250ch(fbcomments))
+lenweb = len(largerthan250ch(articlecomments))
+print "there is/are % d New York Times Facebook comment(s) longer than 250 characters." % (lenfb)
+print "there is/are % d New York Times article comment(s) longer than 250 characters." % (lenweb)
+
+articlecomments.sort(key=len, reverse=True)
+fbcomments.sort(key=len, reverse=True)
+print "The longest New York Times comment in the list we are looking at is % d characters long" % (len(articlecomments[0]))
+print "The longest New York Times Facebook comment in the list we are looking at is % d characters long" % (len(fbcomments[0]))
+
+# def fbfunction(access_token):
+# 	graph = facebook.GraphAPI(access_token)
+# 	feed = graph.get_object("nytimes/feed", limit = 100)
+# 	fblist = []
+# 	for post in feed['data']:
+# 		if post['comments']['data'][0]['message']:
+# 			for comment in post['comments']['data']:
+# 				message = comment['message']
+# 				fblist.append(Comment(message,"FB"))
+# 	fblist = fblist[:25]
+# 	return fblist
+
+listposaccum = []
+for comment in fbcommentslist:
+	listpos = comment.positive()
+	listposaccum.append(listpos)
+listposaccum
+
+listnegaccum = []
+for comment in fbcommentslist:
+	listpos = comment.negative()
+	listnegaccum.append(listpos)
+listnegaccum
+
+nytlistposaccum = []
+for comment in nytcommentlist:
+	listpos = comment.positive()
+	listposaccum.append(listpos)
+nytlistposaccum
+
+nytlistnegaccum = []
+for comment in nytcommentlist:
+	listpos = comment.negative()
+	nytlistnegaccum.append(listpos)
+nytlistnegaccum
+
+
+averagep = 0
+sum = 0    
+for n in listposaccum:
+    sum = sum + n
+averagep = sum / len(listposaccum)
+#print "This is the percentage of words in FB comments that are positive"
+a = averagep * 100
+
+averagen = 0
+sum = 0    
+for n in listnegaccum:
+    sum = sum + n
+averagen = sum / len(listnegaccum)
+#print "This is the percentage of words in FB comments that are negative"
+b = averagen * 100
+
+averagenytpos = 0
+sum = 0    
+for n in nytlistposaccum:
+    sum = sum + n
+averagenytpos = sum / len(listposaccum)
+#print "This is the percentage of words in NYT article comments that are positive"
+c = averagenytpos * 100
+
+averagenytneg = 0
+sum = 0    
+for n in nytlistnegaccum:
+    sum = sum + n
+averagenytneg = sum / len(listnegaccum)
+#print "This is the percentage of words in NYT article comments that are negative"
+d = averagenytneg * 100
+print "--INFORMATION ABOUT THE POSITIVITY AND NEGATIVITY IN COMMENTS--"
+
+if a > c:
+	print "On average, New York Times Facebook comments are more positive than New York Times article comments"
+else:
+	print "On average, New York Times article comments are more positive than New York Times Facebook comments"
+# if b > d:
+# 	print "On average, New York Times Facebook comments have more negative words than New York Times article comments"
+# else:
+# 	print "On average, New York Times article comments have more negative words than New York Times Facebook comments"
+
+
+	
+mycomm = Comment("a happy happy negative bird","NYT")
+mycomm.message
+mycomm.positive()
+mycomm.negative()
+print "--------------TEST CASES--------------"
+
+print "positive test case"
+happy1 = Comment("a happy positive bird negative","NYT")
+if happy1.positive() == .4:
+	print "success"
+else:
+	print "nah"
+
+print "negative test case"
+if happy1.negative() == .2:
+	print "success"
+else:
+	print "nah"
+
+print "250 test case"
+testlist = ["hello","goodbye","MJwlOacprjM9LNaeR22SigwaeoQJuFCV2tlmvT0mrLgEHYFCE6BDTgJieP1cQJsfxaRLolYfeoUyVoRYqpWqTwBsqU9Axfc9fCZM9TmcKbNhBxKtSaJN8D65SBT7GwVYpAUAakRLkau5TX8ENksg7NQ0VicZfR4R6P4BD1Ojg51iy3a9hK7h3GptQNuYRisI912iiZ0gtcFTzx8pzihWeiZWL2iqoWt4bnwVZcQzGn3ZoWlztFAnsgA6bgCUh7VtjNc","ersvUrnODgfe5ejh1j62viGuImVfeRVzzFxmLhlVTZnCB7vR8XrQOpKsMaVcMa50r3BQieLe6K5nhU0UZYRPpDRWgRLeYneIM2HfZ52TKyEtmnrIMeZLzoHKQh4Om6YFgwpYERAwEW5oCsGvJahiXcP7MhsKuPr6bLPWDyVtCkBPoGYOMZbqk6JDGNvikRNbUjU1qbL3GOrNMkGxqI9XFFeLfegka3L2q2TQ1ebcR0hXBCi9J3WkzKC0qMusjkBGXgc0","eb2HvvlKVY9Zptps4fRvzVknVlbBAqWfX1hwn8mVIsC5NnpaaISnm0Y8FqwGAlXtfwj4G47QbN28eA7ivBrBEzRbv2cGUlEmi6Ls1OwqIeh8j7fNgUom10BryJ2WKbkAruDIguSzwA9bxlWrvFLtxF2W5iUW1W3I5KYOZrBJ2bGUDnwHBuEf5PvT99hbKDyvBZART8GNm5glI9u3pYLaorxpHEaG6QlHrj6wwlLKU4ZxjX4DOsb8p2TXcrbvK4wpZrfo"]
+if len(largerthan250ch(testlist)) == 3:
+	print "success"
+else:
+	print "nah"
